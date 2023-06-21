@@ -18,16 +18,22 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from its import views
 
+from authentication.views import RegisterView
 
 router = routers.DefaultRouter()
-# router.register(r'users', views.UserViewSet)
-
+router.register(r'projects', views.ProjectViewSet, basename="projects")
+router.register(r'projects/(?P<project_id>\d+)/users', views.ContributorViewSet, basename="contributors")
+router.register(r'projects/(?P<project_id>\d+)/issues', views.IssueViewSet, basename="issues")
+router.register(r'projects/(?P<project_id>\d+)/issues/(?P<issue_id>\d+)/comments',
+                views.CommentViewSet, basename="comments")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh')
+    path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/signup/', RegisterView.as_view(), name="sign_up"),
 ]

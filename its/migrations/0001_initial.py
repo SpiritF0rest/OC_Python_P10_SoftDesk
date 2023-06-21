@@ -22,7 +22,6 @@ class Migration(migrations.Migration):
                 ('title', models.CharField(max_length=255)),
                 ('description', models.TextField(blank=True)),
                 ('type', models.CharField(choices=[('BK', 'Back-end'), ('FT', 'Front-end'), ('IO', 'iOS'), ('AD', 'Android')], max_length=2)),
-                ('author_user_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='authentication.contributor')),
             ],
         ),
         migrations.CreateModel(
@@ -36,7 +35,7 @@ class Migration(migrations.Migration):
                 ('project_id', models.IntegerField()),
                 ('status', models.CharField(choices=[('TODO', 'À faire'), ('INPG', 'En cours'), ('DONE', 'Terminé')], max_length=4)),
                 ('created_time', models.DateTimeField(auto_now_add=True)),
-                ('assignee_user_id', models.ForeignKey(default=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='author', to=settings.AUTH_USER_MODEL), on_delete=django.db.models.deletion.CASCADE, related_name='assignee', to=settings.AUTH_USER_MODEL)),
+                ('assignee_user_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignee', to=settings.AUTH_USER_MODEL)),
                 ('author_user_id', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='author', to=settings.AUTH_USER_MODEL)),
             ],
         ),
