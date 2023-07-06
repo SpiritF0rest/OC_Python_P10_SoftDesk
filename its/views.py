@@ -1,9 +1,7 @@
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.parsers import JSONParser
-from rest_framework.response import Response
-from rest_framework import filters, status
 
 from authentication.models import User
 from its.models import Project, Contributor, Issue, Comment
@@ -12,9 +10,7 @@ from its.serializers import ProjectSerializer, ContributorSerializer, IssueSeria
 
 class ProjectViewSet(ModelViewSet):
     serializer_class = ProjectSerializer
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    ordering_fields = ['title']
-    search_fields = ['type']
+    permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'put', 'delete']
 
     def get_queryset(self):
@@ -25,35 +21,46 @@ class ProjectViewSet(ModelViewSet):
 
 class ContributorViewSet(ModelViewSet):
     serializer_class = ContributorSerializer
+    permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'delete']
 
     def get_queryset(self, *args, **kwargs):
-        queryset = Contributor.objects.filter(project_id=self.kwargs['project_id'])  # .values_list('user_id')
-        # queryset = User.objects.filter(id__in=users_list)
+        queryset = Contributor.objects.select_related("user_id").filter(project_id=self.kwargs['project_id'])
         return queryset
 
-    def create(self, request, *args, **kwargs):
-        request.data["project_id"] = self.kwargs['project_id']
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    def perform_create(self, serializer):
+        project = get_object_or_404(Project, id=self.kwargs['project_id'])
+        if Contributor.objects.filter(project_id=project, user_id=self.request.user).exists():
+            raise ValidationError('You are already a contributor of this project')
+        serializer.save(project_id=project, user_id=self.request.user)
 
 
 class IssueViewSet(ModelViewSet):
     serializer_class = IssueSerializer
+    permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'put', 'delete']
 
     def get_queryset(self, *args, **kwargs):
         queryset = Issue.objects.filter(project_id=self.kwargs['project_id'])
         return queryset
 
+    def perform_create(self, serializer):
+        project = get_object_or_404(Project, id=self.kwargs['project_id'])
+        assignee = self.request.user
+        if "assignee_user_id" in self.request.data and self.request.data["assignee_user_id"] != "":
+            assignee = get_object_or_404(User, id=self.request.data["assignee_user_id"])
+        serializer.save(project_id=project, author_user_id=self.request.user, assignee_user_id=assignee)
+
 
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated]
     http_method_names = ['get', 'post', 'put', 'delete']
 
     def get_queryset(self, *args, **kwargs):
         queryset = Comment.objects.filter(issue_id=self.kwargs['issue_id'])
         return queryset
+
+    def perform_create(self, serializer):
+        issue = get_object_or_404(Issue, id=self.kwargs['issue_id'])
+        serializer.save(author_user_id=self.request.user, issue_id=issue)
