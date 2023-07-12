@@ -5,12 +5,13 @@ from rest_framework.viewsets import ModelViewSet
 
 from authentication.models import User
 from its.models import Project, Contributor, Issue, Comment
+from its.permissions import ContributorPermission, AuthorPermission
 from its.serializers import ProjectSerializer, ContributorSerializer, IssueSerializer, CommentSerializer
 
 
 class ProjectViewSet(ModelViewSet):
     serializer_class = ProjectSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, ContributorPermission, AuthorPermission]
     http_method_names = ['get', 'post', 'put', 'delete']
 
     def get_queryset(self):
@@ -21,7 +22,7 @@ class ProjectViewSet(ModelViewSet):
 
 class ContributorViewSet(ModelViewSet):
     serializer_class = ContributorSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, ContributorPermission, AuthorPermission]
     http_method_names = ['get', 'post', 'delete']
 
     def get_queryset(self, *args, **kwargs):
@@ -37,7 +38,7 @@ class ContributorViewSet(ModelViewSet):
 
 class IssueViewSet(ModelViewSet):
     serializer_class = IssueSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, ContributorPermission, AuthorPermission]
     http_method_names = ['get', 'post', 'put', 'delete']
 
     def get_queryset(self, *args, **kwargs):
@@ -54,7 +55,7 @@ class IssueViewSet(ModelViewSet):
 
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, ContributorPermission, AuthorPermission]
     http_method_names = ['get', 'post', 'put', 'delete']
 
     def get_queryset(self, *args, **kwargs):
