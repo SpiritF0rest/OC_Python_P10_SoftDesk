@@ -42,6 +42,9 @@ $ source env/bin/activate
 To install modules: 
 $ pip install -r requirements.txt
 
+To apply migrations
+$ python3 manage.py migrate
+
 To run server:
 $ python3 manage.py runserver
 
