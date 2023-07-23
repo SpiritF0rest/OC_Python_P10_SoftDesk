@@ -19,7 +19,7 @@ class AuthorPermission(permissions.BasePermission):
                                                        role="AU").exists()
                 return is_author
             return False
-        if view.basename == "projects" and view.action == "retrieve":
+        if view.basename in ["projects", "comments"] and view.action == "retrieve":
             return True
         return False
 
@@ -31,8 +31,12 @@ class ContributorPermission(permissions.BasePermission):
             return True
         elif view.basename == "projects" and view.action == "list":
             return True
-        elif view.action in ["retrieve", "update", "destroy"]:
+        elif view.action in ["update", "destroy"]:
             return True
+        elif view.basename == "projects" and view.action == "retrieve":
+            is_contributor = Contributor.objects.filter(project_id=request.parser_context["kwargs"]["pk"],
+                                                        user_id=request.user).exists()
+            return is_contributor
         else:
             is_contributor = Contributor.objects.filter(project_id=request.parser_context["kwargs"]["project_id"],
                                                         user_id=request.user).exists()
